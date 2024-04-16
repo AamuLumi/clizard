@@ -1,0 +1,12 @@
+version: "3.1"
+
+services:
+  clizard-debian:
+    build: .
+    working_dir: /home/test/clizard
+    volumes:
+      - ../../clizard:/home/test/clizard
+
+volumes:
+  clizard:
+    driver: local
