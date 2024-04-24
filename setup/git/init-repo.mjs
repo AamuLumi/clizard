@@ -9,29 +9,39 @@ displayDescription(
 	`This script will create a new git repository to synchronize your changes on a server.`,
 );
 
-const repositoryPath = (await question('Repository path ? (default: ~) ')) ?? '~';
+let repositoryPath = (await question('Repository path ? (default: ~) ')) || '~';
 const repositoryName = (await question('Repository name ? (no spaces) ')).replaceAll(' ', '');
 const repositoryDefaultBranch = (await question('Repository default branch ? (no spaces | default: main) ')).replaceAll(' ', '') || 'main';
 const publicKey = (await question('Public key ?'));
 
 const userName = `git_${repositoryName}`;
+const homePathForUser = path.join('/', 'home', userName);
+const sshPathForUser = path.join(homePathForUser, `.ssh`);
 
-await $`sudo adduser ${userName}`;
-await $`su ${userName}`;
-cd('~');
-await fs.mkdir('.ssh');
-await fs.chmod('.ssh', '700');
-await fs.createFile('.ssh/authorized-keys');
-await fs.chmod('.ssh', '600');
+if (repositoryPath.indexOf('~') === 0) {
+	repositoryPath = repositoryPath.replace('~', homePathForUser);
+}
 
-await fs.appendFile('.ssh/authorizedKeys', publicKey);
+await $`sudo useradd --home ${homePathForUser} -m ${userName}`;
+await $`usermod --password $(echo ${userName} | openssl passwd -1 -stdin) ${userName}`;
 
-await fs.mkdir(`${repositoryPath}/${repositoryName}.git`);
-cd(`${repositoryPath}/${repositoryName}.git`);
+await fs.mkdir(sshPathForUser);
+await fs.chmod(sshPathForUser, '700');
+await fs.createFile(path.join(sshPathForUser, 'authorized_keys'));
+await fs.chmod(path.join(sshPathForUser, 'authorized_keys'), '600');
+
+await fs.appendFile(path.join(sshPathForUser, 'authorized_keys'), `${publicKey}\n`);
+
+await fs.mkdir(path.join(repositoryPath, `${repositoryName}.git`));
+cd(path.join(repositoryPath, `${repositoryName}.git`));
 await $`git init --bare`;
-await $`git checkout -b ${repositoryDefaultBranch}`;
+await $`git branch -m ${repositoryDefaultBranch}`;
+
+await $`chown -R ${userName}:${userName} ${homePathForUser}`;
+await $`chown -R ${userName}:${userName} ${repositoryPath}`;
 
 echo`Git server configured. You can connect with :`;
-echo` - repository: ${repositoryPath}/${repositoryName}`;
+echo` - repository path: ${repositoryPath}/${repositoryName}.git`;
+echo` - repository name: ${repositoryName}.git`;
 echo` - username : ${userName}`;
 echo` - branch : ${repositoryDefaultBranch}`;
