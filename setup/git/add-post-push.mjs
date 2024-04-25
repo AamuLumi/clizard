@@ -8,12 +8,34 @@ displayDescription(
 	`By default, post-push hook will use this file in your repo : <root_folder>/hooks/on-post-receive.sh \n`,
 );
 
-const repositoryPath = (await question('Repository path ? (default: ~/repo.git) ')) ?? '~/repo.git';
+const repositoryPath = (await question('Repository path ? (default: ~/repo.git) ')) || '~/repo.git';
+const targetPath = (await question('Deployment path ? (default: ~/repo) ')) || '~/repo';
+const branchToDeploy = (await question('Branch to deploy ? (default: main) ')) || 'main';
 
 cd(repositoryPath);
 
-await fs.appendFile(`./hooks/post-receive`, `../../hooks/on-post-receive.sh`);
-await $`chmod a+x ./hooks/post-receive`;
+await fs.appendFile(`./hooks/post-receive`, `#!/bin/bash
+
+TARGET="${targetPath}"
+GIT_DIR="${repositoryPath}"
+BRANCH="${branchToDeploy}"
+
+while read oldrev newrev ref
+do
+\t# only checking out the master (or whatever branch you would like to deploy)
+\tif [ "$ref" = "refs/heads/$BRANCH" ];
+\tthen
+\t\techo "Ref $ref received. Deploying \${BRANCH} branch to production..."
+\t\tgit --work-tree=$TARGET --git-dir=$GIT_DIR checkout -f $BRANCH
+\t\tcd ${targetPath}
+\t\t./hooks/on-post-receive.sh
+\telse
+\t\techo "Ref $ref received. Doing nothing: only the \${BRANCH} branch may be deployed on this server."
+\tfi
+done
+`);
+
+await $`chmod +x ./hooks/post-receive`;
 
 echo`Git server updated. Start with :`;
-echo` - deploy file : <root_folder>/hooks/on-post-receive.sh`;
+echo` - deploy file : <project_root_folder>/hooks/on-post-receive.sh`;
