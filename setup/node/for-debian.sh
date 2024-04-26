@@ -6,6 +6,7 @@ curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
 
 # Load nvm
 NVM_DIR="$HOME/.nvm"
+source "$NVM_DIR/nvm.sh" 
 \. "$NVM_DIR/nvm.sh"  # This loads nvm
 
 # download and install Node.js
@@ -21,5 +22,6 @@ npm -v
 
 echo "\n\nRun these commands to load nvm in current term : "
 echo "NVM_DIR=\"$HOME/.nvm\""
-echo "[ -s \"$NVM_DIR/nvm.sh\" ] && $NVM_DIR/nvm.sh"
+echo "source $NVM_DIR/nvm.sh"
+echo "$NVM_DIR/nvm.sh"
 

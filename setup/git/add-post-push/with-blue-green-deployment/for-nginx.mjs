@@ -2,7 +2,7 @@
 
 // Highly inspired by https://medium.com/@feyzilim/blue-green-deployments-for-next-js-using-pm2-nginx-and-github-22cae8893af7
 
-import { displayDescription } from '../../lib/textHelpers.mjs';
+import { displayDescription } from '../../../../lib/textHelpers.mjs';
 
 displayDescription(
 	`This script will add a post-push hook to run a build command in a git repository.`,
@@ -22,15 +22,17 @@ cd(repositoryPath);
 
 await fs.appendFile(`./hooks/post-receive`, `#!/bin/bash
 
-BLUE_TARGET="${blueTargetPath}"
+source ~/.bashrc
+
+BLUE_DIR="${blueTargetPath}"
 BLUE_PORT="${bluePort}"
-GREEN_TARGET="${greenTargetPath}"
+GREEN_DIR="${greenTargetPath}"
 GREEN_PORT="${greenPort}"
 GIT_DIR="${repositoryPath}"
 BRANCH="${branchToDeploy}"
 NGINX_CONFIGURATION_PATH="${nginxConfigurationPath}"
 
-CURRENT_PORT=$(grep -oP 'proxy_pass http://localhost:\K\d+' $NGINX_CONFIG)
+CURRENT_PORT=$(grep -oP 'proxy_pass http://localhost:\\K\\d+' $NGINX_CONFIGURATION_PATH)
 OLD_NAME=""
 TARGET_DIR=""
 TARGET_PORT=""
@@ -41,17 +43,18 @@ do
 \t# only checking out the master (or whatever branch you would like to deploy)
 \tif [ "$ref" = "refs/heads/$BRANCH" ];
 \tthen
-\tif [ "$CURRENT_PORT" == "$BLUE_PORT" ]; then
-\t\tTARGET_DIR=$GREEN_DIR
-\t\tTARGET_PORT=$GREEN_PORT
-\t\tOLD_NAME=$(basename $GREEN_DIR)
-\t\tENV_NAME="blue"
-\telse
-\t\tTARGET_DIR=$BLUE_DIR
-\t\tTARGET_PORT=$BLUE_PORT
-\t\tOLD_NAME=$(basename $BLUE_DIR)
-\t\tENV_NAME="green"
-\tfi
+\t\tif [ "$CURRENT_PORT" == "$BLUE_PORT" ]; then
+\t\t\tTARGET_DIR=$GREEN_DIR
+\t\t\tTARGET_PORT=$GREEN_PORT
+\t\t\tOLD_NAME=$(basename $GREEN_TARGET)
+\t\t\tENV_NAME="blue"
+\t\telse
+\t\t\tTARGET_DIR=$BLUE_DIR
+\t\t\tTARGET_PORT=$BLUE_PORT
+\t\t\tOLD_NAME=$(basename $BLUE_TARGET)
+\t\t\tENV_NAME="green"
+\t\tfi
+\t\t
 \t\tcd ~
 \t\techo "Ref $ref received. Deploying \${BRANCH} branch to production on \${TARGET_PORT} (env \${ENV_NAME})..."
 \t\tmkdir \${TARGET_DIR}
@@ -79,7 +82,7 @@ do
 \t\tdone
 \t\t
 \t\techo "Server up! Switching Nginx to target environment..."
-\t\tsed -i "s/proxy_pass http:\\/\\/localhost:[0-9]*;/proxy_pass http:\\/\\/localhost:$TARGET_PORT;/" $NGINX_CONFIG
+\t\tsed -i "s/proxy_pass http:\\/\\/localhost:[0-9]*;/proxy_pass http:\\/\\/localhost:$TARGET_PORT;/" $NGINX_CONFIGURATION_PATH
 \t\tnginx -s reload
 \t\t
 \t\techo "Deployment complete. Target environment ($TARGET_NAME) is now live!"
