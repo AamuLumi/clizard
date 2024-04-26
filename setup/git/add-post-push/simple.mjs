@@ -25,7 +25,9 @@ do
 \t# only checking out the master (or whatever branch you would like to deploy)
 \tif [ "$ref" = "refs/heads/$BRANCH" ];
 \tthen
+\t\tcd ~
 \t\techo "Ref $ref received. Deploying \${BRANCH} branch to production..."
+\t\tmkdir ${targetPath}
 \t\tgit --work-tree=$TARGET --git-dir=$GIT_DIR checkout -f $BRANCH
 \t\tcd ${targetPath}
 \t\t./hooks/on-post-receive.sh
