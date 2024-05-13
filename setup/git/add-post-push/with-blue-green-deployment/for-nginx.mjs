@@ -7,7 +7,7 @@ import { displayDescription } from '../../../../lib/textHelpers.mjs';
 displayDescription(
 	`This script will add a post-push hook to run a build command in a git repository.`,
 	`It's useful if you want a simple push repo with an auto-deployment feature.`,
-	`By default, post-push hook will use this file in your repo : <root_folder>/hooks/on-post-receive.sh \n`,
+	`By default, post-push hook will use this file in your repo : <root_folder>/hooks/build.sh and deploy.sh.\n`,
 );
 
 const repositoryPath = (await question('Repository path ? (default: ~/repo.git) ')) || '~/repo.git';
