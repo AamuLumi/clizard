@@ -36,6 +36,10 @@ Scripts paths follow the pattern : `setup/<program>/<options>/<feature>.mjs`.
 
 - Authorize a command for a user ([more](/setup/sudo/authorize_command_for_user.mjs))
 
+### zx
+
+- Install zx ([more](/setup/zx.sh))
+
 ## Development and testing
 
 There's a simple script to create a debian container locally w/ Docker or Podman and link the repo as a volume.  
