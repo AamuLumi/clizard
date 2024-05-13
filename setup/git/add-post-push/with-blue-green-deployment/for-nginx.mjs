@@ -93,7 +93,7 @@ do
 \t\t
 \t\techo "Server up ! Switching nginx to target environment..."
 \t\tsed -i "s/proxy_pass http:\\/\\/localhost:[0-9]*;/proxy_pass http:\\/\\/localhost:$TARGET_PORT;/" $NGINX_CONFIGURATION_PATH
-\t\tnginx -s reload
+\t\tsudo systemctl restart nginx.service
 \t\t
 \t\techo "Deployment complete. Target environment ($TARGET_NAME) is now live!"
 \tfi
