@@ -3,21 +3,24 @@
 // Highly inspired by https://medium.com/@feyzilim/blue-green-deployments-for-next-js-using-pm2-nginx-and-github-22cae8893af7
 
 import { displayDescription } from '../../../../lib/textHelpers.mjs';
+import { askUser } from '../../../../lib/interactions.mjs';
 
 displayDescription(
 	`This script will add a post-push hook to run a build command in a git repository.`,
 	`It's useful if you want a simple push repo with an auto-deployment feature.`,
-	`By default, post-push hook will use this file in your repo : <root_folder>/hooks/build.sh and deploy.sh.\n`,
+	`By default, post-push hook will use this file in your repo : build.sh and deploy.sh/deploy.config.json.\n`,
+	'Deploy script can be a .sh file (script launched in pm2) or a .config.json file (pm2 configuration to start).\n',
 );
 
-const repositoryPath = (await question('Repository path ? (default: ~/repo.git) ')) || '~/repo.git';
-const blueTargetPath = (await question('Blue deployment path ? (default: ~/blue) ')) || '~/blue';
-const bluePort = (await question('Blue port ? (default: 31700) ')) || '31700';
-const greenTargetPath = (await question('Green deployment path ? (default: ~/green) ')) || '~/green';
-const greenPort = (await question('Green port ? (default: 31701) ')) || '31701';
-const nginxConfigurationPath = (await question('nginx configuration path ? (default: /etc/nginx/sites-available/repo) ')) || '/etc/nginx/sites-available/repo';
-const branchToDeploy = (await question('Branch to deploy ? (default: main) ')) || 'main';
-const envFileForDeployment = (await question('.env file to load for deployment (default: .env) ')) || '.env';
+const repositoryPath = (await askUser('Repository path ?', { defaultValue: '~/repo.git' }));
+const blueTargetPath = (await askUser('Blue deployment path ?', { defaultValue: '~/blue' }));
+const bluePort = (await askUser('Blue port ?', { defaultValue: 31700, answerType: 'number' }));
+const greenTargetPath = (await askUser('Green deployment path ?', { defaultValue: '~/green' }));
+const greenPort = (await askUser('Green port ?', { defaultValue: 31701, answerType: 'number' }));
+const nginxConfigurationPath = (await askUser('nginx configuration path ?', { defaultValue: '/etc/nginx/sites-available/repo' }));
+const branchToDeploy = (await askUser('Branch to deploy ?', { defaultValue: 'main' }));
+const envFileForDeployment = (await askUser('.env path to load for deployment ?', { defaultValue: '.env' }));
+const hooksFolder = (await askUser('Hooks folder ?', { defaultValue: './hooks' }));
 
 cd(repositoryPath);
 
@@ -32,6 +35,8 @@ GREEN_PORT="${greenPort}"
 GIT_DIR="${repositoryPath}"
 BRANCH="${branchToDeploy}"
 NGINX_CONFIGURATION_PATH="${nginxConfigurationPath}"
+ENV_FILE="${envFileForDeployment}"
+HOOKS_FOLDER="${hooksFolder}"
 
 CURRENT_PORT=$(grep -oP 'proxy_pass http://localhost:\\K\\d+' $NGINX_CONFIGURATION_PATH)
 OLD_NAME=""
@@ -62,11 +67,14 @@ do
 \t\tmkdir \${TARGET_DIR}
 \t\tgit --work-tree=$TARGET_DIR --git-dir=$GIT_DIR checkout -f $BRANCH
 \t\tcd \${TARGET_DIR}
+\t\texport $(grep -v '^#' \${ENV_FILE} | xargs -d '\n')
+\t\t
+\t\techo "Load env from \${ENV_FILE}"
 \t\texport PORT=TARGET_PORT DIR=TARGET_DIR
 \t\t
 \t\techo "Running build.sh hook"
-\t\tchmod +x ./hooks/build.sh
-\t\t./hooks/build.sh
+\t\tchmod +x \${HOOKS_FOLDER}/build.sh
+\t\t\${HOOKS_FOLDER}/build.sh
 \t\t
 \t\techo "Stopping PM2 target \${TARGET_NAME}"
 \t\tTARGET_NAME=\${TARGET_DIR%.*}
@@ -74,13 +82,17 @@ do
 \t\tpm2 delete $TARGET_NAME
 \t\t
 \t\techo "Running deploy.sh through PM2 start"
-\t\tpm2 start ./hooks/deploy.sh --name "$TARGET_NAME" || pm2 restart $TARGET_NAME
+\t\tif [ -f "$HOOKS_FOLDER/deploy.config.js"]; then
+\t\t\tpm2 start \${HOOKS_FOLDER}/deploy.config.js --name "$TARGET_NAME" || pm2 restart $TARGET_NAME
+\t\telse
+\t\t\tpm2 start \${HOOKS_FOLDER}/deploy.sh --name "$TARGET_NAME" || pm2 restart $TARGET_NAME
+\t\tfi
 \t\t
 \t\techo "Stopping old environment in PM2 ($OLD_NAME)..."
 \t\tpm2 stop $OLD_NAME
 \t\tpm2 delete $OLD_NAME
 \t\t
-\t\t echo "Saving PM2 environment"
+\t\techo "Saving PM2 environment"
 \t\tpm2 save
 \t\t
 \t\tSTATUS_CODE=0
@@ -103,5 +115,5 @@ done
 await $`chmod +x ./hooks/post-receive`;
 
 echo`Git server updated. Start with :`;
-echo` - build script : <project_root_folder>/hooks/build.sh (variables : PORT, DIR)`;
-echo` - deploy script : <project_root_folder>/hooks/deploy.sh (variables : PORT, DIR)`;
+echo` - build script : ${path.join(hooksFolder, 'build.sh')} (variables : PORT, DIR)`;
+echo` - deploy script : ${path.join(hooksFolder, 'deploy.sh')} (variables : PORT, DIR) or (PM2 configuration) ${path.join(hooksFolder, 'deploy.config.json')} (variables : PORT)`;
