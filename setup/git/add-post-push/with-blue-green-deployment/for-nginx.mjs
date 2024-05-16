@@ -28,10 +28,10 @@ await fs.appendFile(`./hooks/post-receive`, `#!/bin/bash
 
 source ~/.bashrc
 
-BLUE_DIR="${blueTargetPath}"
-BLUE_PORT="${bluePort}"
-GREEN_DIR="${greenTargetPath}"
-GREEN_PORT="${greenPort}"
+BLUE_DIR=${blueTargetPath}
+BLUE_PORT=${bluePort}
+GREEN_DIR=${greenTargetPath}
+GREEN_PORT=${greenPort}
 GIT_DIR="${repositoryPath}"
 BRANCH="${branchToDeploy}"
 NGINX_CONFIGURATION_PATH="${nginxConfigurationPath}"
@@ -52,13 +52,13 @@ do
 \t\tif [ $CURRENT_PORT == $BLUE_PORT ]; then
 \t\t\tTARGET_DIR=$GREEN_DIR
 \t\t\tTARGET_PORT=$GREEN_PORT
-\t\t\tOLD_NAME=\${GREEN_DIR%.*}
-\t\t\tENV_NAME=blue
+\t\t\tOLD_NAME=\${BLUE_DIR%.*}
+\t\t\tENV_NAME=green
 \t\telse
 \t\t\tTARGET_DIR=$BLUE_DIR
 \t\t\tTARGET_PORT=$BLUE_PORT
-\t\t\tOLD_NAME=\${BLUE_TARGET%.*}
-\t\t\tENV_NAME=green
+\t\t\tOLD_NAME=\${GREEN_DIR%.*}
+\t\t\tENV_NAME=blue
 \t\tfi
 \t\t
 \t\tcd ~
