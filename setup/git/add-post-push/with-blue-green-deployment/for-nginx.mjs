@@ -52,12 +52,12 @@ do
 \t\tif [ $CURRENT_PORT == $BLUE_PORT ]; then
 \t\t\tTARGET_DIR=$GREEN_DIR
 \t\t\tTARGET_PORT=$GREEN_PORT
-\t\t\tOLD_NAME=\${BLUE_DIR%.*}
+\t\t\tOLD_NAME=\${BLUE_DIR%##*/}
 \t\t\tENV_NAME=green
 \t\telse
 \t\t\tTARGET_DIR=$BLUE_DIR
 \t\t\tTARGET_PORT=$BLUE_PORT
-\t\t\tOLD_NAME=\${GREEN_DIR%.*}
+\t\t\tOLD_NAME=\${GREEN_DIR##*/}
 \t\t\tENV_NAME=blue
 \t\tfi
 \t\t
@@ -77,13 +77,13 @@ do
 \t\t\${HOOKS_FOLDER}/build.sh
 \t\t
 \t\techo "Stopping PM2 target \${TARGET_NAME}"
-\t\tTARGET_NAME=\${TARGET_DIR%.*}
+\t\tTARGET_NAME=\${TARGET_DIR##*/}
 \t\tpm2 stop $TARGET_NAME
 \t\tpm2 delete $TARGET_NAME
 \t\t
 \t\techo "Running deploy.sh through PM2 start"
 \t\tif [ -f "$HOOKS_FOLDER/deploy.config.js"]; then
-\t\t\tpm2 start \${HOOKS_FOLDER}/deploy.config.js --name "$TARGET_NAME" || pm2 restart $TARGET_NAME
+\t\t\tpm2 start \${HOOKS_FOLDER}/deploy.config.js --only "$TARGET_NAME" || pm2 restart $TARGET_NAME
 \t\telse
 \t\t\tpm2 start \${HOOKS_FOLDER}/deploy.sh --name "$TARGET_NAME" || pm2 restart $TARGET_NAME
 \t\tfi
