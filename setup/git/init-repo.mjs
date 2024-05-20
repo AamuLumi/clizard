@@ -23,7 +23,7 @@ if (repositoryPath.indexOf('~') === 0) {
 }
 
 await $`sudo useradd --home ${homePathForUser} -m ${userName}`;
-await $`usermod --password $(echo ${userName} | openssl passwd -1 -stdin) ${userName}`;
+await $`usermod -s /bin/bash --password $(echo ${userName} | openssl passwd -1 -stdin) ${userName}`;
 
 await fs.mkdir(sshPathForUser);
 await fs.chmod(sshPathForUser, '700');
