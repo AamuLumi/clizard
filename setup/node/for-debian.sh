@@ -1,5 +1,10 @@
-sudo apt update
-sudo apt install curl -y
+#!/bin/bash
+
+if ! command -v curl &> /dev/null
+then
+    echo "curl could not be found. Please install curl before executing this script."
+    exit 1
+fi
 
 # installs NVM (Node Version Manager)
 curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
