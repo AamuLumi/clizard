@@ -70,7 +70,7 @@ do
 \t\texport $(grep -v '^#' \${ENV_FILE} | xargs -d '\n')
 \t\t
 \t\techo "Load env from \${ENV_FILE}"
-\t\texport PORT=TARGET_PORT DIR=TARGET_DIR
+\t\texport PORT=$TARGET_PORT DIR=$TARGET_DIR
 \t\t
 \t\techo "Running build.sh hook"
 \t\tchmod +x \${HOOKS_FOLDER}/build.sh
@@ -82,7 +82,7 @@ do
 \t\tpm2 delete $TARGET_NAME
 \t\t
 \t\techo "Running deploy.sh through PM2 start"
-\t\tif [ -f "$HOOKS_FOLDER/deploy.config.js"]; then
+\t\tif [ -f "$HOOKS_FOLDER/deploy.config.js" ]; then
 \t\t\tpm2 start \${HOOKS_FOLDER}/deploy.config.js --only "$TARGET_NAME" || pm2 restart $TARGET_NAME
 \t\telse
 \t\t\tpm2 start \${HOOKS_FOLDER}/deploy.sh --name "$TARGET_NAME" || pm2 restart $TARGET_NAME
