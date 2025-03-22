@@ -52,7 +52,7 @@ do
 \t\tif [ $CURRENT_PORT == $BLUE_PORT ]; then
 \t\t\tTARGET_DIR=$GREEN_DIR
 \t\t\tTARGET_PORT=$GREEN_PORT
-\t\t\tOLD_NAME=\${BLUE_DIR%##*/}
+\t\t\tOLD_NAME=\${BLUE_DIR##*/}
 \t\t\tENV_NAME=green
 \t\telse
 \t\t\tTARGET_DIR=$BLUE_DIR
